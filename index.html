@@ -1,7 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Custom Widget</title>
+  <meta charset="utf-8">
+  <title>Grist Form Example</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.3/vue.min.js"></script>
+  <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -9,7 +12,7 @@
     .container {
       padding: 20px;
     }
-    input[type="text"] {
+    input[type="text"], input[type="email"], input[type="tel"] {
       width: 200px;
       padding: 10px;
       margin: 10px 0;
@@ -21,22 +24,67 @@
       border: none;
       cursor: pointer;
     }
+    .error {
+      color: red;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Custom Widget</h1>
-    <input type="text" id="inputField" placeholder="Enter some text">
-    <button onclick="submitData()">Submit</button>
+  <div id="app" class="container">
+    <h1>Form Input Example</h1>
+    <form @submit.prevent="submitForm">
+      <div>
+        <label for="firstName">First Name:</label>
+        <input type="text" id="firstName" v-model="firstName" required>
+      </div>
+      <div>
+        <label for="lastName">Last Name:</label>
+        <input type="text" id="lastName" v-model="lastName" required>
+      </div>
+      <div>
+        <label for="phone">Phone:</label>
+        <input type="tel" id="phone" v-model="phone" required>
+        <span class="error" v-if="phone && !isValidPhone">Invalid Phone Number</span>
+      </div>
+      <div>
+        <label for="email">Email:</label>
+        <input type="email" id="email" v-model="email" required>
+        <span class="error" v-if="email && !isValidEmail">Invalid Email</span>
+      </div>
+      <button type="submit">Submit</button>
+    </form>
   </div>
 
   <script>
-    function submitData() {
-      const inputField = document.getElementById('inputField').value;
-      alert(`You entered: ${inputField}`);
-      // Add code here to interact with Grist API
-    }
+    new Vue({
+      el: '#app',
+      data: {
+        firstName: '',
+        lastName: '',
+        phone: '',
+        email: ''
+      },
+      computed: {
+        isValidPhone() {
+          const phoneRegex = /^\d{10}$/;
+          return phoneRegex.test(this.phone);
+        },
+        isValidEmail() {
+          const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+          return emailRegex.test(this.email);
+        }
+      },
+      methods: {
+        submitForm() {
+          if (this.isValidPhone && this.isValidEmail) {
+            alert(`Form Submitted!\nFirst Name: ${this.firstName}\nLast Name: ${this.lastName}\nPhone: ${this.phone}\nEmail: ${this.email}`);
+            // Add code here to interact with Grist API, if necessary
+          } else {
+            alert('Please correct the errors in the form.');
+          }
+        }
+      }
+    });
   </script>
 </body>
 </html>
-
