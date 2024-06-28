@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Updated - Grist Form Example</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.3/vue.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      padding: 20px;
+    }
+    input[type="text"], input[type="email"], input[type="tel"] {
+      width: 200px;
+      padding: 10px;
+      margin: 10px 0;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="container">
+    <h1>Form Input Example</h1>
+    <form @submit.prevent="submitForm">
+      <div>
+        <label for="firstName">First Name:</label>
+        <input type="text" id="firstName" v-model="firstName" required>
+      </div>
+      <div>
+        <label for="lastName">Last Name:</label>
+        <input type="text" id="lastName" v-model="lastName" required>
+      </div>
+      <div>
+        <label for="phone">Phone:</label>
+        <input type="tel" id="phone" v-model="phone" required>
+        <span class="error" v-if="phone && !isValidPhone">Invalid Phone Number</span>
+      </div>
+      <div>
+        <label for="email">Email:</label>
+        <input type="email" id="email" v-model="email" required>
+        <span class="error" v-if="email && !isValidEmail">Invalid Email</span>
+      </div>
+      <button type="submit">Submit</button>
+    </form>
+    <div class="status" v-if="status">{{ status }}</div>
+  </div>
+
+  <script>
+    new Vue({
+      el: '#app',
+      data: {
+        firstName: '',
+        lastName: '',
+        phone: '',
+        email: '',
+        status: ''
+      },
+      computed: {
+        isValidPhone() {
+          const phoneRegex = /^\d{10}$/;
+          return phoneRegex.test(this.phone);
+        },
+        isValidEmail() {
+          const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+          return emailRegex.test(this.email);
+        }
+      },
+      methods: {
+        async submitForm() {
+          if (this.isValidPhone && this.isValidEmail) {
+            const record = {
+              Fname: this.firstName,
+              Lname: this.lastName,
+              Phone: this.phone,
+              Email: this.email
+            };
+            try {
+              const response = await fetch('http://localhost:3000/submit', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(record)
+              });
+              if (response.ok) {
+                this.status = 'Form Submitted and Data Saved in Grist!';
+                // Reset form after successful submission
+                this.firstName = '';
+                this.lastName = '';
+                this.phone = '';
+                this.email = '';
+              } else {
+                const errorData = await response.json();
+                this.status = `Error submitting form: ${errorData.error}`;
+              }
+            } catch (error) {
+              console.error('Error submitting form:', error);
+              this.status = 'Error submitting form. Check console for details.';
+            }
+          } else {
+            alert('Please correct the errors in the form.');
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
