@@ -53,6 +53,24 @@
       </div>
       <button type="submit">Submit</button>
     </form>
+    <div class="status" v-if="status">
+      <template v-if="status === 'waiting'">
+        <p>Waiting for data...</p>
+        <ul>
+          <li v-bind:class="[tableConnected ? 'done' : '']">I need <b>read table</b> access.</li>
+          <li v-bind:class="[haveRows ? 'done' : '']">I need at least one row of data.</li>
+          <li v-bind:class="[rowConnected ? 'done' : '']">I need <b>Select By</b> set.</li>
+        </ul>
+        <p>Examples:</p>
+        <ul>
+          <li><a class="button" href="index.html?demo=1">A filled out invoice</a></li>
+          <li><a class="button" href="index.html?labels=1">A labelled invoice</a></li>
+        </ul>
+      </template>
+      <template v-else>
+        {{ status }}
+      </template>
+    </div>
   </div>
 
   <script>
@@ -62,7 +80,11 @@
         firstName: '',
         lastName: '',
         phone: '',
-        email: ''
+        email: '',
+        status: 'waiting',
+        tableConnected: false,
+        haveRows: false,
+        rowConnected: false
       },
       computed: {
         isValidPhone() {
@@ -75,13 +97,50 @@
         }
       },
       methods: {
-        submitForm() {
+        async submitForm() {
           if (this.isValidPhone && this.isValidEmail) {
-            alert(`Form Submitted!\nFirst Name: ${this.firstName}\nLast Name: ${this.lastName}\nPhone: ${this.phone}\nEmail: ${this.email}`);
-            // Add code here to interact with Grist API, if necessary
+            const record = {
+              Fname: this.firstName,
+              Lname: this.lastName,
+              Phone: this.phone,
+              Email: this.email
+            };
+            // Add code here to interact with Grist API to save the record
+            try {
+              const grist = window.grist;
+              if (grist) {
+                await grist.docApi.applyUserActions([
+                  ['AddRecord', 'Just_Practice', record]
+                ]);
+                alert('Form Submitted and Data Saved in Grist!');
+              } else {
+                alert('Form Submitted, but Grist API is not available!');
+              }
+            } catch (error) {
+              console.error('Error submitting form to Grist:', error);
+              alert('Error submitting form. Check console for details.');
+            }
           } else {
             alert('Please correct the errors in the form.');
           }
+        }
+      },
+      async mounted() {
+        const grist = window.grist;
+        if (grist) {
+          grist.ready();
+          try {
+            const docApi = await grist.docApi.getDocInfo();
+            this.status = 'connected';
+            this.tableConnected = !!docApi.tables.find(table => table.tableId === 'Just_Practice');
+            this.haveRows = true; // Placeholder, update based on actual row check logic
+            this.rowConnected = true; // Placeholder, update based on actual row check logic
+          } catch (error) {
+            console.error('Error connecting to Grist:', error);
+            this.status = 'Error connecting to Grist';
+          }
+        } else {
+          this.status = 'Grist API not available';
         }
       }
     });
