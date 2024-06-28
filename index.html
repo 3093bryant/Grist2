@@ -105,14 +105,18 @@
               Phone: this.phone,
               Email: this.email
             };
-            // Add code here to interact with Grist API to save the record
             try {
               const grist = window.grist;
               if (grist) {
                 await grist.docApi.applyUserActions([
-                  ['AddRecord', 'Just_Practice', record]
+                  ['AddRecord', 'Just Practice', record]
                 ]);
                 alert('Form Submitted and Data Saved in Grist!');
+                // Reset form after successful submission
+                this.firstName = '';
+                this.lastName = '';
+                this.phone = '';
+                this.email = '';
               } else {
                 alert('Form Submitted, but Grist API is not available!');
               }
@@ -132,7 +136,7 @@
           try {
             const docApi = await grist.docApi.getDocInfo();
             this.status = 'connected';
-            this.tableConnected = !!docApi.tables.find(table => table.tableId === 'Just_Practice');
+            this.tableConnected = !!docApi.tables.find(table => table.tableId === 'Just Practice');
             this.haveRows = true; // Placeholder, update based on actual row check logic
             this.rowConnected = true; // Placeholder, update based on actual row check logic
           } catch (error) {
